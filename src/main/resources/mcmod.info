@@ -1,0 +1,18 @@
+[{
+    "modid": "MC-Profiler",
+    "name": "${modname}",
+    "description": "${description}",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "${url}",
+    "updateUrl": "",
+    "authors": ["DarkCow"],
+    "credits": "Calcalvia, Alex_hawks, Tgame14, Dmod, Hangcow, etc.. will add the rest later",
+    "logoFile": "",
+    "screenshots": [],
+    "parent": "",
+    "requiredMods": [],
+    "dependencies": [],
+    "dependants": [],
+    "useDependencyInformation": "false"
+}]
