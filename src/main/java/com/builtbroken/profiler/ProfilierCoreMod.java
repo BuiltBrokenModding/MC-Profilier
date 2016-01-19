@@ -9,7 +9,7 @@ import java.util.Map;
  * @see <a href="https://github.com/BuiltBrokenModding/VoltzEngine/blob/development/license.md">License</a> for what you can and can't do with the code.
  * Created by Dark(DarkGuardsman, Robert) on 1/14/2016.
  */
-@IFMLLoadingPlugin.TransformerExclusions(value = {"zmaster587.advancedRocketry.asm.ClassTransformer"})
+@IFMLLoadingPlugin.TransformerExclusions(value = {"com.builtbroken.profiler.asm.WorldTransformer"})
 @IFMLLoadingPlugin.MCVersion("1.7.10")
 public class ProfilierCoreMod implements IFMLLoadingPlugin
 {

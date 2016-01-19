@@ -110,6 +110,31 @@ public class WorldTransformer implements IClassTransformer
             nodeAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onBlockMetaChange", "(L" + getName(CLASS_KEY_WORLD) + ";III)V", false));
 
             setBlockMetaMethod.instructions.insertBefore(setBlockMetaMethod.instructions.get(0), nodeAdd);
+
+            //Locate all return points from the method
+            List<AbstractInsnNode> returnNodes = new ArrayList();
+            for (int i = 0; i < setBlockMetaMethod.instructions.size(); i++)
+            {
+                AbstractInsnNode ain = setBlockMetaMethod.instructions.get(i);
+                if (ain.getOpcode() == Opcodes.IRETURN)
+                {
+                    returnNodes.add(ain);
+                }
+            }
+
+            //Inject calls in front of return points
+            for (AbstractInsnNode node : returnNodes)
+            {
+                //Create method call
+                final InsnList nodeAdd2 = new InsnList();
+                nodeAdd2.add(new VarInsnNode(Opcodes.ALOAD, 0));
+                nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 1));
+                nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 2));
+                nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 3));
+                nodeAdd2.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onPostBlockMetaChange", "(L" + getName(CLASS_KEY_WORLD) + ";III)V", false));
+                //Inject method call before return node
+                setBlockMetaMethod.instructions.insertBefore(node, nodeAdd2);
+            }
         }
     }
 

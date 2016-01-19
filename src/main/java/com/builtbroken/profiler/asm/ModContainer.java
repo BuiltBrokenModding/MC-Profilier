@@ -13,8 +13,7 @@ import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import java.util.Arrays;
 
 public class ModContainer extends DummyModContainer {
-	
-	//ModContainer Class adapted from SackCastellon
+
 	public ModContainer()
 	{		
 		super(new ModMetadata());
@@ -38,7 +37,6 @@ public class ModContainer extends DummyModContainer {
 	@Override
 	public boolean registerBus(EventBus bus, LoadController controller)
 	{
-		System.out.println("********* registerBus. OK");
 		bus.register(this);
 		return true;
 	}
