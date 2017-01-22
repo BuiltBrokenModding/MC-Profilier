@@ -4,7 +4,7 @@ import com.builtbroken.jlib.type.Pair;
 import com.builtbroken.profiler.utils.plot.Plot;
 import junit.framework.TestCase;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 
 /**
  * @see <a href="https://github.com/BuiltBrokenModding/VoltzEngine/blob/development/license.md">License</a> for what you can and can't do with the code.
@@ -40,8 +40,8 @@ public class PlotTest extends TestCase
         plot.addPoint(5L, 1000000);
         plot.addPoint(6L, 1000000);
         plot.addPoint(7L, 1000000);
-        BigDecimal value = plot.getAverageTime();
-        assertEquals(new BigDecimal(1000000), value);
+        BigInteger value = plot.getAverageTime();
+        assertEquals(BigInteger.valueOf(1000000), value);
         String out = plot.getAvergateTimeDisplay();
         assertEquals("1s", out);
     }

@@ -46,8 +46,6 @@ public class TickHandler
                     logger.info("\tB:" + entry.getKey().getLocalizedName() + ", " + entry.getValue().getAvergateTimeDisplay());
                 }
                 logger.info("====================================");
-                BlockHooks.blockPlacementLogs.clear();
-                BlockHooks.blockPlacementPosLogs.clear();
             }
         }
     }

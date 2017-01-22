@@ -2,7 +2,7 @@ package com.builtbroken.profiler.utils.plot;
 
 import com.builtbroken.jlib.type.Pair;
 
-import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -15,7 +15,7 @@ public class Plot extends ArrayList<Pair<Long, Integer>>
     public final String plotName;
 
     private boolean reCalculateAverage = false;
-    private BigDecimal averageTickTime = new BigDecimal(0);
+    private BigInteger averageTickTime = BigInteger.ZERO;
 
     public Plot(String name)
     {
@@ -61,23 +61,24 @@ public class Plot extends ArrayList<Pair<Long, Integer>>
      *
      * @return average tick time
      */
-    public BigDecimal getAverageTime()
+    public BigInteger getAverageTime()
     {
         if (reCalculateAverage)
         {
-            BigDecimal value = new BigDecimal(0);
+            BigInteger value = BigInteger.ZERO;
             for (Pair<Long, Integer> entry : this)
             {
-                value = value.add(new BigDecimal(entry.right()));
+                value = value.add(BigInteger.valueOf(entry.right()));
             }
-            averageTickTime = value.divide(new BigDecimal(this.size()));
+            averageTickTime = value.divide(BigInteger.valueOf(this.size()));
+            reCalculateAverage = false;
         }
         return averageTickTime;
     }
 
     public String getAvergateTimeDisplay()
     {
-        return formatDisplayString(averageTickTime.toPlainString());
+        return formatDisplayString(getAverageTime().toString()) + "    [" + getAverageTime().toString() + "ns]";
     }
 
     public String formatDisplayString(String nanoTime)
