@@ -43,7 +43,7 @@ public class TickHandler
                 logger.info("\tBlock Placement Times");
                 for (Map.Entry<Block, PlotBlock> entry : BlockHooks.blockPlacementLogs.entrySet())
                 {
-                    logger.info("\tB:" + entry.getKey().getLocalizedName() + ", " + entry.getValue().getAverageTime());
+                    logger.info("\tB:" + entry.getKey().getLocalizedName() + ", " + entry.getValue().getAvergateTimeDisplay());
                 }
                 logger.info("====================================");
                 BlockHooks.blockPlacementLogs.clear();
