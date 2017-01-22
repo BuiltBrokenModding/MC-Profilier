@@ -1,6 +1,5 @@
 package com.builtbroken.profiler;
 
-import com.builtbroken.profiler.asm.WorldTransformer;
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
 
 import java.util.Map;
@@ -15,7 +14,7 @@ public class ProfilierCoreMod implements IFMLLoadingPlugin
 {
     @Override
     public String[] getASMTransformerClass() {
-        return new String[] {WorldTransformer.class.getName()};
+        return new String[] {"com.builtbroken.profiler.asm.WorldTransformer"};
     }
 
     @Override

@@ -31,7 +31,7 @@ public class BlockHooks
     {
         if (!world.isRemote)
         {
-            Pos pos = new Pos(x, y, z);
+            final Pos pos = new Pos(x, y, z);
             if (tickTimes.containsKey(pos))
             {
                 long time = System.nanoTime() - tickTimes.get(pos);
