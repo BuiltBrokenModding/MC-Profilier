@@ -1,6 +1,8 @@
 package com.builtbroken.profiler;
 
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Map;
 
@@ -12,6 +14,20 @@ import java.util.Map;
 @IFMLLoadingPlugin.MCVersion("1.7.10")
 public class ProfilierCoreMod implements IFMLLoadingPlugin
 {
+    public static final Logger logger = LogManager.getLogger("BBM-Profiler-ASM");
+
+    /**
+     * Checks if the program is running in development mode.
+     * This is normally used to enable additional debug such
+     * as printing edited classes to file between runs.
+     *
+     * @return true if system arguments contain -Ddevelopmenet=true
+     */
+    public static boolean isDevMode()
+    {
+        return System.getProperty("development") != null && System.getProperty("development").equalsIgnoreCase("true");
+    }
+
     @Override
     public String[] getASMTransformerClass() {
         return new String[] {"com.builtbroken.profiler.asm.WorldTransformer"};

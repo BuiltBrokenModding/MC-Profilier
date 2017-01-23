@@ -3,8 +3,6 @@ package com.builtbroken.profiler.asm;
 import net.minecraft.block.Block;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.world.World;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -12,6 +10,7 @@ import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * @see <a href="https://github.com/BuiltBrokenModding/VoltzEngine/blob/development/license.md">License</a> for what you can and can't do with the code.
@@ -21,7 +20,9 @@ public class WorldTransformer implements IClassTransformer
 {
     private static final String CLASS_KEY_WORLD = "net.minecraft.world.World";
     private static final String CLASS_KEY_BLOCK = "net.minecraft.block.Block";
+    private static final String CLASS_KEY_TILE = "net.minecraft.tileentity.TileEntity";
     private static final String BLOCK_HOOK_CLASS = "com/builtbroken/profiler/hooks/BlockHooks";
+    private static final String WORLD_HOOK_CLASS = "com/builtbroken/profiler/hooks/WorldHooks";
 
     private static final HashMap<String, SimpleEntry<String, String>> entryMap = new HashMap<String, SimpleEntry<String, String>>();
 
@@ -31,6 +32,7 @@ public class WorldTransformer implements IClassTransformer
     {
         entryMap.put(CLASS_KEY_WORLD, new SimpleEntry<String, String>("net/minecraft/world/World", "ahb"));
         entryMap.put(CLASS_KEY_BLOCK, new SimpleEntry<String, String>("net/minecraft/block/Block", "aij"));
+        entryMap.put(CLASS_KEY_TILE, new SimpleEntry<String, String>("net/minecraft/tileentity/TileEntity", "aor"));
 
     }
 
@@ -40,10 +42,11 @@ public class WorldTransformer implements IClassTransformer
         String changedName = name.replace('.', '/');
         if (changedName.equals(getName(CLASS_KEY_WORLD)))
         {
-            ClassNode cn = startInjection(bytes);
+            ClassNode cn = ASMUtility.startInjection("profiler", bytes);
             injectSetBlock(cn);
             injectSetBlockWithMeta(cn);
-            return finishInjection(cn);
+            injectUpdateEntities(cn);
+            return ASMUtility.finishInjection("profiler", cn);
         }
         return bytes;
     }
@@ -51,7 +54,7 @@ public class WorldTransformer implements IClassTransformer
     /** {@link World#setBlock(int, int, int, Block, int, int)} */
     private void injectSetBlock(ClassNode cn)
     {
-        MethodNode setBlockMethod = getMethod(cn, "setBlock", "(IIIL" + getName(CLASS_KEY_BLOCK) + ";II)Z");
+        MethodNode setBlockMethod = ASMUtility.getMethod(cn, "setBlock", "func_147465_d", "(IIIL" + getName(CLASS_KEY_BLOCK) + ";II)Z");
 
         if (setBlockMethod != null)
         {
@@ -97,7 +100,7 @@ public class WorldTransformer implements IClassTransformer
     /** {@link World#setBlockMetadataWithNotify(int, int, int, int, int)} */
     private void injectSetBlockWithMeta(ClassNode cn)
     {
-        MethodNode setBlockMetaMethod = getMethod(cn, "setBlockMetadataWithNotify", "(IIIII)Z");
+        MethodNode setBlockMetaMethod = ASMUtility.getMethod(cn, "setBlockMetadataWithNotify", "func_72921_c", "(IIIII)Z");
 
         if (setBlockMetaMethod != null)
         {
@@ -138,32 +141,47 @@ public class WorldTransformer implements IClassTransformer
         }
     }
 
-    private ClassNode startInjection(byte[] bytes)
+    /** {@link World#updateEntities()} */
+    private void injectUpdateEntities(ClassNode cn)
     {
-        final ClassNode node = new ClassNode();
-        final ClassReader reader = new ClassReader(bytes);
-        reader.accept(node, 0);
+        MethodNode updateMethod = ASMUtility.getMethod(cn, "updateEntities", "func_72939_s", "()V");
 
-        return node;
-    }
-
-    private byte[] finishInjection(ClassNode node)
-    {
-        final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        node.accept(writer);
-        return writer.toByteArray();
-    }
-
-    private MethodNode getMethod(ClassNode node, String name, String sig)
-    {
-        for (MethodNode methodNode : node.methods)
+        if (updateMethod != null)
         {
-            if (methodNode.name.equals(name) && methodNode.desc.equals(sig))
+            int tileVarIndex = ASMUtility.getVarIndex(updateMethod, "tileentity");
+
+            final InsnList nodeAdd = new InsnList();
+            nodeAdd.add(new VarInsnNode(Opcodes.ALOAD, 0)); //this
+            nodeAdd.add(new VarInsnNode(Opcodes.ALOAD, tileVarIndex));
+            nodeAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, WORLD_HOOK_CLASS, "onUpdateEntity", "(L" + getName(CLASS_KEY_WORLD) + ";L" + getName(CLASS_KEY_TILE) + ";)V", false));
+
+            final InsnList nodeAdd2 = new InsnList();
+            nodeAdd2.add(new VarInsnNode(Opcodes.ALOAD, 0)); //this
+            nodeAdd2.add(new VarInsnNode(Opcodes.ALOAD, tileVarIndex));
+            nodeAdd2.add(new MethodInsnNode(Opcodes.INVOKESTATIC, WORLD_HOOK_CLASS, "onPostUpdateEntity", "(L" + getName(CLASS_KEY_WORLD) + ";L" + getName(CLASS_KEY_TILE) + ";)V", false));
+
+            ListIterator<AbstractInsnNode> it = updateMethod.instructions.iterator();
+            MethodInsnNode updateEntityCall = null;
+            while (it.hasNext())
             {
-                return methodNode;
+                AbstractInsnNode node = it.next();
+                if (node instanceof MethodInsnNode)
+                {
+                    //tileentity.updateEntity();
+                    if (((MethodInsnNode) node).name.equals("updateEntity") && ((MethodInsnNode) node).owner.contains("TileEntity"))
+                    {
+                        updateEntityCall = (MethodInsnNode) node;
+                        break;
+                    }
+                }
+            }
+            if (updateEntityCall != null)
+            {
+                //Inject replacement
+                updateMethod.instructions.insertBefore(updateEntityCall, nodeAdd);
+                updateMethod.instructions.insertBefore(updateEntityCall.getNext(), nodeAdd2);
             }
         }
-        return null;
     }
 
     private String getName(String key)
