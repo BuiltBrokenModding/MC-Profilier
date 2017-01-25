@@ -42,7 +42,5 @@ public class PlotTest extends TestCase
         plot.addPoint(7L, 1000000);
         BigInteger value = plot.getAverageTime();
         assertEquals(BigInteger.valueOf(1000000), value);
-        String out = plot.getAvergateTimeDisplay();
-        assertEquals("1s", out);
     }
 }
