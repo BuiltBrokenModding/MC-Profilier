@@ -1,13 +1,17 @@
 package com.builtbroken.profiler;
 
+import com.builtbroken.profiler.asm.checks.CheckFakeWorld;
 import com.builtbroken.profiler.commands.CommandProfilier;
+import com.builtbroken.profiler.hooks.BlockHooks;
 import com.builtbroken.profiler.hooks.TickHandler;
+import com.builtbroken.profiler.hooks.WorldHooks;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 import net.minecraft.command.ICommandManager;
 import net.minecraft.command.ServerCommandManager;
+import net.minecraft.init.Blocks;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -25,10 +29,38 @@ public class ProfilerMod
     {
         FMLCommonHandler.instance().bus().register(TickHandler.INSTANCE);
 
+        logger.info("============================================");
+        logger.info("============================================");
+
+
+
+
         logger.info("Checking if ASM was applied");
         logger.info("TileEntity#updateEntity(): " + ProfilerCoreMod.tileUpdateHookAdded);
         logger.info("World#setBlock: " + ProfilerCoreMod.blockChangeHookAdded);
-        logger.info("World#setBlockMeta: " + ProfilerCoreMod.blockChangeMetaHookAdded);
+        logger.info("World#setMeta: " + ProfilerCoreMod.blockChangeMetaHookAdded);
+
+
+
+        logger.info("Checking if ASM is working");
+        CheckFakeWorld world = CheckFakeWorld.newWorld("Test");
+        world.setBlock(0, 0, 0, Blocks.stone);
+
+        boolean works = BlockHooks.blockPlacementLogs.containsKey(Blocks.stone);
+        logger.info("World#setBlock: " + works);
+
+
+        world.setBlockMetadataWithNotify(0, 0, 0, 1, 0);
+        works = BlockHooks.blockPlacementLogs.get(Blocks.stone).size() == 2;
+        logger.info("World#setMeta: " + works);
+
+        world.setBlock(0, 0, 0, Blocks.chest);
+        world.updateEntities();
+        works = WorldHooks.tileEntityUpdateLogs.size() > 0;
+        logger.info("TileEntity#updateEntity(): " + works);
+
+        logger.info("============================================");
+        logger.info("============================================");
     }
 
     @Mod.EventHandler
