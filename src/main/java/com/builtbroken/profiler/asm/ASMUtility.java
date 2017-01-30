@@ -129,7 +129,7 @@ public final class ASMUtility
                 File file = new File("./asmTestFolder/" + cl + ".class");
                 if (!file.getParentFile().exists())
                 {
-                    file.mkdirs();
+                    file.getParentFile().mkdirs();
                 }
                 System.out.println("Writing ASM class[" + cl + "] to " + file);
                 FileOutputStream fos = new FileOutputStream(file);
