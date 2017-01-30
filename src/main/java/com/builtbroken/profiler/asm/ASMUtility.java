@@ -229,7 +229,7 @@ public final class ASMUtility
         //Check if the method node matches directly first (Only works in dev workspace)
         if (checkName.equals(name) && (desc == null || checkDesc.equals(desc)))
         {
-            return true;
+            return owner == null || owner.equals(checkOwner);
         }
         //If not then use the ObfMappings as we most likely are on a live copy of Minecraft
         else

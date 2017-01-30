@@ -7,9 +7,7 @@ import net.minecraft.world.World;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -22,16 +20,15 @@ public class WorldTransformer implements IClassTransformer
     private static final String CLASS_KEY_WORLD = "net.minecraft.world.World";
     private static final String CLASS_KEY_BLOCK = "net.minecraft.block.Block";
     private static final String CLASS_KEY_TILE = "net.minecraft.tileentity.TileEntity";
+
     private static final String BLOCK_HOOK_CLASS = "com/builtbroken/profiler/hooks/BlockHooks";
     private static final String WORLD_HOOK_CLASS = "com/builtbroken/profiler/hooks/WorldHooks";
 
-    private static final HashMap<String, SimpleEntry<String, String>> entryMap = new HashMap<String, SimpleEntry<String, String>>();
-
     public WorldTransformer()
     {
-        entryMap.put(CLASS_KEY_WORLD, new SimpleEntry<String, String>("net/minecraft/world/World", "ahb"));
-        entryMap.put(CLASS_KEY_BLOCK, new SimpleEntry<String, String>("net/minecraft/block/Block", "aij"));
-        entryMap.put(CLASS_KEY_TILE, new SimpleEntry<String, String>("net/minecraft/tileentity/TileEntity", "aor"));
+        //entryMap.put(CLASS_KEY_WORLD, new SimpleEntry<String, String>("net/minecraft/world/World", "ahb"));
+        //entryMap.put(CLASS_KEY_BLOCK, new SimpleEntry<String, String>("net/minecraft/block/Block", "aij"));
+        //entryMap.put(CLASS_KEY_TILE, new SimpleEntry<String, String>("net/minecraft/tileentity/TileEntity", "aor"));
     }
 
     @Override
@@ -39,7 +36,7 @@ public class WorldTransformer implements IClassTransformer
     {
         //debug("WorldTransformer >> Name: " + name + "   TransformerName: " + transformerName);
         String changedName = name.replace('.', '/');
-        if (changedName.equals(getName(CLASS_KEY_WORLD)))
+        if (changedName.equals("net/minecraft/world/World"))
         {
             debug("Found world class file");
             ClassNode cn = ASMUtility.startInjection("profiler", bytes);
@@ -70,16 +67,16 @@ public class WorldTransformer implements IClassTransformer
         MethodNode setBlockMethod;
         if (ProfilerCoreMod.obfuscated)
         {
-            setBlockMethod = ASMUtility.getMethod(cn, "d", "(IIIL" + entryMap.get(CLASS_KEY_BLOCK).getValue() + ";II)Z");
+            setBlockMethod = ASMUtility.getMethod(cn, "d", "(IIILnet/minecraft/block/Block;II)Z");
         }
         else
         {
-            setBlockMethod = ASMUtility.getMethod(cn, "setBlock", "(IIIL" + entryMap.get(CLASS_KEY_BLOCK).getKey() + ";II)Z");
+            setBlockMethod = ASMUtility.getMethod(cn, "setBlock", "(IIILnet/minecraft/block/Block;II)Z");
         }
         if (setBlockMethod == null)
         {
             debug("Failed to locate World#setBlock(), moving to backup name");
-            setBlockMethod = ASMUtility.getMethod(cn, "func_147465_d", "(IIIL" + entryMap.get(CLASS_KEY_BLOCK).getKey() + ";II)Z");
+            setBlockMethod = ASMUtility.getMethod(cn, "func_147465_d", "(IIILnet/minecraft/block/Block;II)Z");
         }
 
         if (setBlockMethod != null)
@@ -91,7 +88,7 @@ public class WorldTransformer implements IClassTransformer
             nodeAdd.add(new VarInsnNode(Opcodes.ILOAD, 1));
             nodeAdd.add(new VarInsnNode(Opcodes.ILOAD, 2));
             nodeAdd.add(new VarInsnNode(Opcodes.ILOAD, 3));
-            nodeAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onBlockChange", "(L" + getName(CLASS_KEY_WORLD) + ";III)V", false));
+            nodeAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onBlockChange", "(Lnet/minecraft/world/World;III)V", false));
 
             //Inject method call at top of method
             setBlockMethod.instructions.insertBefore(setBlockMethod.instructions.get(0), nodeAdd);
@@ -116,7 +113,7 @@ public class WorldTransformer implements IClassTransformer
                 nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 1));
                 nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 2));
                 nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 3));
-                nodeAdd2.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onPostBlockChange", "(L" + getName(CLASS_KEY_WORLD) + ";III)V", false));
+                nodeAdd2.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onPostBlockChange", "(Lnet/minecraft/world/World;III)V", false));
                 //Inject method call before return node
                 setBlockMethod.instructions.insertBefore(node, nodeAdd2);
             }
@@ -147,7 +144,7 @@ public class WorldTransformer implements IClassTransformer
             nodeAdd.add(new VarInsnNode(Opcodes.ILOAD, 1)); //x
             nodeAdd.add(new VarInsnNode(Opcodes.ILOAD, 2)); //y
             nodeAdd.add(new VarInsnNode(Opcodes.ILOAD, 3)); //z
-            nodeAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onBlockMetaChange", "(L" + getName(CLASS_KEY_WORLD) + ";III)V", false));
+            nodeAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onBlockMetaChange", "(Lnet/minecraft/world/World;III)V", false));
 
             setBlockMetaMethod.instructions.insertBefore(setBlockMetaMethod.instructions.get(0), nodeAdd);
 
@@ -171,7 +168,7 @@ public class WorldTransformer implements IClassTransformer
                 nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 1));
                 nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 2));
                 nodeAdd2.add(new VarInsnNode(Opcodes.ILOAD, 3));
-                nodeAdd2.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onPostBlockMetaChange", "(L" + getName(CLASS_KEY_WORLD) + ";III)V", false));
+                nodeAdd2.add(new MethodInsnNode(Opcodes.INVOKESTATIC, BLOCK_HOOK_CLASS, "onPostBlockMetaChange", "(Lnet/minecraft/world/World;III)V", false));
                 //Inject method call before return node
                 setBlockMetaMethod.instructions.insertBefore(node, nodeAdd2);
             }
@@ -200,12 +197,12 @@ public class WorldTransformer implements IClassTransformer
             final InsnList nodeAdd = new InsnList();
             nodeAdd.add(new VarInsnNode(Opcodes.ALOAD, 0)); //this
             nodeAdd.add(new VarInsnNode(Opcodes.ALOAD, tileVarIndex));
-            nodeAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, WORLD_HOOK_CLASS, "onUpdateEntity", "(L" + getName(CLASS_KEY_WORLD) + ";L" + getName(CLASS_KEY_TILE) + ";)V", false));
+            nodeAdd.add(new MethodInsnNode(Opcodes.INVOKESTATIC, WORLD_HOOK_CLASS, "onUpdateEntity", "(Lnet/minecraft/world/World;Lnet/minecraft/tileentity/TileEntity;)V", false));
 
             final InsnList nodeAdd2 = new InsnList();
             nodeAdd2.add(new VarInsnNode(Opcodes.ALOAD, 0)); //this
             nodeAdd2.add(new VarInsnNode(Opcodes.ALOAD, tileVarIndex));
-            nodeAdd2.add(new MethodInsnNode(Opcodes.INVOKESTATIC, WORLD_HOOK_CLASS, "onPostUpdateEntity", "(L" + getName(CLASS_KEY_WORLD) + ";L" + getName(CLASS_KEY_TILE) + ";)V", false));
+            nodeAdd2.add(new MethodInsnNode(Opcodes.INVOKESTATIC, WORLD_HOOK_CLASS, "onPostUpdateEntity", "(Lnet/minecraft/world/World;Lnet/minecraft/tileentity/TileEntity;)V", false));
 
             ListIterator<AbstractInsnNode> it = updateMethod.instructions.iterator();
             MethodInsnNode updateEntityCall = null;
@@ -215,13 +212,13 @@ public class WorldTransformer implements IClassTransformer
                 if (node instanceof MethodInsnNode)
                 {
                     //we are looking for (tileentity.updateEntity();) inside of a for loop in the World#updateEntities() method
-                    if (ASMUtility.doesMethodsMatch("updateEntity", null, entryMap.get(CLASS_KEY_TILE).getKey(), (MethodInsnNode) node))
+                    if (ASMUtility.doesMethodsMatch("updateEntity", null, "net/minecraft/tileentity/TileEntity", (MethodInsnNode) node))
                     {
                         updateEntityCall = (MethodInsnNode) node;
                         break;
                     }
                     //func_145845_h
-                    if (ASMUtility.doesMethodsMatch("func_145845_h", null, entryMap.get(CLASS_KEY_TILE).getKey(), (MethodInsnNode) node))
+                    if (ASMUtility.doesMethodsMatch("func_145845_h", null, "net/minecraft/tileentity/TileEntity", (MethodInsnNode) node))
                     {
                         updateEntityCall = (MethodInsnNode) node;
                         break;
@@ -251,23 +248,6 @@ public class WorldTransformer implements IClassTransformer
         if (ProfilerCoreMod.isDevMode())
         {
             ProfilerCoreMod.logger.info(msg);
-        }
-    }
-
-    private String getName(String key)
-    {
-        SimpleEntry<String, String> entry = entryMap.get(key);
-        if (entry == null)
-        {
-            return "";
-        }
-        else if (ProfilerCoreMod.obfuscated)
-        {
-            return entry.getValue();
-        }
-        else
-        {
-            return entry.getKey();
         }
     }
 }
