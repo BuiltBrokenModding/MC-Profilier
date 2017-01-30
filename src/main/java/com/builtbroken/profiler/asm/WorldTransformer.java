@@ -37,12 +37,17 @@ public class WorldTransformer implements IClassTransformer
     @Override
     public byte[] transform(String name, String transformerName, byte[] bytes)
     {
+        //debug("WorldTransformer >> Name: " + name + "   TransformerName: " + transformerName);
         String changedName = name.replace('.', '/');
         if (changedName.equals(getName(CLASS_KEY_WORLD)))
         {
+            debug("Found world class file");
             ClassNode cn = ASMUtility.startInjection("profiler", bytes);
+            debug("Injecting set block hook");
             injectSetBlock(cn);
+            debug("Injecting set meta hook");
             injectSetBlockWithMeta(cn);
+            debug("Injecting update tile hook");
             injectUpdateEntities(cn);
             return ASMUtility.finishInjection("profiler", cn);
         }
@@ -52,7 +57,12 @@ public class WorldTransformer implements IClassTransformer
     /** {@link World#setBlock(int, int, int, Block, int, int)} */
     private void injectSetBlock(ClassNode cn)
     {
-        MethodNode setBlockMethod = ASMUtility.getMethod(cn, "setBlock", "func_147465_d", "(IIIL" + getName(CLASS_KEY_BLOCK) + ";II)Z");
+        MethodNode setBlockMethod = ASMUtility.getMethod(cn, "setBlock", "(IIIL" + getName(CLASS_KEY_BLOCK) + ";II)Z");
+        if (setBlockMethod == null)
+        {
+            debug("Failed to locate setBlock method, moving to backup name");
+            setBlockMethod = ASMUtility.getMethod(cn, "func_147465_d", "(IIIL" + getName(CLASS_KEY_BLOCK) + ";II)Z");
+        }
 
         if (setBlockMethod != null)
         {
@@ -94,12 +104,22 @@ public class WorldTransformer implements IClassTransformer
             }
             ProfilerCoreMod.blockChangeHookAdded = true;
         }
+
+        else
+        {
+            ProfilerCoreMod.logger.error("Failed to find setBlock method");
+        }
     }
 
     /** {@link World#setBlockMetadataWithNotify(int, int, int, int, int)} */
     private void injectSetBlockWithMeta(ClassNode cn)
     {
-        MethodNode setBlockMetaMethod = ASMUtility.getMethod(cn, "setBlockMetadataWithNotify", "func_72921_c", "(IIIII)Z");
+        MethodNode setBlockMetaMethod = ASMUtility.getMethod(cn, "setBlockMetadataWithNotify", "(IIIII)Z");
+        if (setBlockMetaMethod == null)
+        {
+            debug("Failed to locate set meta method, moving to backup name");
+            setBlockMetaMethod = ASMUtility.getMethod(cn, "func_72921_c", "(IIIII)Z");
+        }
 
         if (setBlockMetaMethod != null)
         {
@@ -139,12 +159,21 @@ public class WorldTransformer implements IClassTransformer
             }
             ProfilerCoreMod.blockChangeMetaHookAdded = true;
         }
+        else
+        {
+            ProfilerCoreMod.logger.error("Failed to find setBlockMetadataWithNotify method");
+        }
     }
 
     /** {@link World#updateEntities()} */
     private void injectUpdateEntities(ClassNode cn)
     {
-        MethodNode updateMethod = ASMUtility.getMethod(cn, "updateEntities", "func_72939_s", "()V");
+        MethodNode updateMethod = ASMUtility.getMethod(cn, "updateEntities", "()V");
+        if (updateMethod == null)
+        {
+            debug("Failed to locate update entity method, moving to backup name");
+            updateMethod = ASMUtility.getMethod(cn, "func_72939_s", "()V");
+        }
 
         if (updateMethod != null)
         {
@@ -182,6 +211,18 @@ public class WorldTransformer implements IClassTransformer
                 updateMethod.instructions.insertBefore(updateEntityCall.getNext(), nodeAdd2);
             }
             ProfilerCoreMod.tileUpdateHookAdded = true;
+        }
+        else
+        {
+            ProfilerCoreMod.logger.error("Failed to find updateEntities method");
+        }
+    }
+
+    private void debug(String msg)
+    {
+        if (ProfilerCoreMod.isDevMode())
+        {
+            ProfilerCoreMod.logger.info(msg);
         }
     }
 

@@ -151,22 +151,17 @@ public final class ASMUtility
      * @param sig
      * @return
      */
-    public static MethodNode getMethod(ClassNode node, String name, String name2, String sig)
+    public static MethodNode getMethod(ClassNode node, String name, String sig)
     {
         for (MethodNode methodNode : node.methods)
         {
             ObfMapping mapping = new ObfMapping(node.name, methodNode.name, methodNode.desc).toRuntime();
-            if ((mapping.s_name.equals(name) || mapping.s_name.equals(name2)) && (sig == null || mapping.s_desc.equals(sig) || methodNode.desc.equals(sig)))
+            if (mapping.s_name.equals(name) && (sig == null || mapping.s_desc.equals(sig) || methodNode.desc.equals(sig)))
             {
                 return methodNode;
             }
         }
         return null;
-    }
-
-    public static MethodNode getMethod(ClassNode node, String name, String name2)
-    {
-        return getMethod(node, name, name2, null);
     }
 
     /**
