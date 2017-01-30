@@ -146,22 +146,115 @@ public final class ASMUtility
     /**
      * Gets the method with the name and sig
      *
-     * @param node
-     * @param name
-     * @param sig
-     * @return
+     * @param node - class node
+     * @param name - name of the method
+     * @param desc - method description (Params)
+     * @return method if found
      */
-    public static MethodNode getMethod(ClassNode node, String name, String sig)
+    public static MethodNode getMethod(ClassNode node, String name, String desc)
     {
         for (MethodNode methodNode : node.methods)
         {
-            ObfMapping mapping = new ObfMapping(node.name, methodNode.name, methodNode.desc).toRuntime();
-            if (mapping.s_name.equals(name) && (sig == null || mapping.s_desc.equals(sig) || methodNode.desc.equals(sig)))
+            if (doesMethodsMatch(name, desc, node.name, methodNode, node.name))
             {
                 return methodNode;
             }
         }
+        if (ProfilerCoreMod.isDevMode())
+        {
+            ProfilerCoreMod.logger.error("ASMUtility.getMethod(" + node.name + ", " + name + ", " + desc + ") Failed to find method");
+        }
         return null;
+    }
+
+    /**
+     * Checks if a method node matches the given name and description provided.
+     * <p>
+     * Will attempt to remap the method if obfuscated
+     * <p>
+     * If in development mode this method will output debug information to check if the method
+     * partially matched expected results. Just in case the description was incorrectly entered
+     * or has changed.
+     *
+     * @param name  - name of the method
+     * @param desc  - method description (Params)
+     * @param owner - owner of the method
+     * @param node  - method to check
+     * @return true if it matches
+     */
+    public static boolean doesMethodsMatch(String name, String desc, String owner, MethodNode node, String nodeOwner)
+    {
+        return doesMethodsMatch(name, desc, owner, node.name, node.desc, nodeOwner);
+    }
+
+    /**
+     * Checks if a method node matches the given name and description provided.
+     * <p>
+     * Will attempt to remap the method if obfuscated
+     * <p>
+     * If in development mode this method will output debug information to check if the method
+     * partially matched expected results. Just in case the description was incorrectly entered
+     * or has changed.
+     *
+     * @param name  - name of the method
+     * @param desc  - method description (Params)
+     * @param owner - owner of the method
+     * @param node  - method to check
+     * @return true if it matches
+     */
+    public static boolean doesMethodsMatch(String name, String desc, String owner, MethodInsnNode node)
+    {
+        return doesMethodsMatch(name, desc, owner, node.name, node.desc, node.owner);
+    }
+
+    /**
+     * Checks if a method node matches the given name and description provided.
+     * <p>
+     * Will attempt to remap the method if obfuscated
+     * <p>
+     * If in development mode this method will output debug information to check if the method
+     * partially matched expected results. Just in case the description was incorrectly entered
+     * or has changed.
+     *
+     * @param name       - name of the method
+     * @param desc       - method description (Params)
+     * @param owner      - owner of the method
+     * @param checkOwner - class the method belongs to
+     * @param checkName  - name of the method to check
+     * @param checkDesc  - method description (Params)
+     * @return true if it matches
+     */
+    public static boolean doesMethodsMatch(String name, String desc, String owner, String checkName, String checkDesc, String checkOwner)
+    {
+        //Check if the method node matches directly first (Only works in dev workspace)
+        if (checkName.equals(name) && (desc == null || checkDesc.equals(desc)))
+        {
+            return true;
+        }
+        //If not then use the ObfMappings as we most likely are on a live copy of Minecraft
+        else
+        {
+            ObfMapping mapping = new ObfMapping(checkOwner, checkName, checkDesc).toRuntime();
+            //Check if remapped name or ordinal name matches our expected name
+            if (checkName.equals(name) || mapping.s_name.equals(name))
+            {
+                //Check if remapped description or orginal description match
+                if (desc == null || mapping.s_desc.equals(desc) || checkDesc.equals(desc))
+                {
+                    return owner == null || owner.equals(checkOwner) || owner.equals(mapping.s_owner);
+                }
+                //Development debug to check if method signature changed or is incorrect
+                if (ProfilerCoreMod.isDevMode())
+                {
+                    ProfilerCoreMod.logger.info("------------------------------------------------------------------------");
+                    ProfilerCoreMod.logger.info("ASMUtility.getMethod(" + owner + ", " + name + ", " + desc + ") Found method by same name");
+                    ProfilerCoreMod.logger.info("\tMethod: " + checkName + checkDesc + "  Owner: " + checkOwner);
+                    ProfilerCoreMod.logger.info("\tMapped: " + mapping.s_name + mapping.s_desc + "  Owner: " + mapping.s_owner);
+                    ProfilerCoreMod.logger.info("------------------------------------------------------------------------");
+                }
+            }
+        }
+        return false;
     }
 
     /**

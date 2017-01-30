@@ -38,4 +38,10 @@ public class WorldHooks
             tileEntityTickTimes.remove(tile);
         }
     }
+
+    public static void clearLogs()
+    {
+        tileEntityTickTimes.clear();
+        tileEntityUpdateLogs.clear();
+    }
 }

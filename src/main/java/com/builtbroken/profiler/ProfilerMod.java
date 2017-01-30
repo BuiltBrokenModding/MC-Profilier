@@ -48,16 +48,18 @@ public class ProfilerMod
 
         boolean works = BlockHooks.blockPlacementLogs.containsKey(Blocks.stone);
         logger.info("World#setBlock: " + works);
-
+        BlockHooks.clearLogs();
 
         world.setBlockMetadataWithNotify(0, 0, 0, 1, 0);
-        works = BlockHooks.blockPlacementLogs.get(Blocks.stone).size() == 2;
+        works = BlockHooks.blockPlacementLogs.containsKey(Blocks.stone);
         logger.info("World#setMeta: " + works);
+        BlockHooks.clearLogs();
 
         world.setBlock(0, 0, 0, Blocks.chest);
         world.updateEntities();
         works = WorldHooks.tileEntityUpdateLogs.size() > 0;
         logger.info("TileEntity#updateEntity(): " + works);
+        WorldHooks.clearLogs();
 
         logger.info("============================================");
         logger.info("============================================");

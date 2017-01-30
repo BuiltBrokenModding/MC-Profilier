@@ -43,12 +43,22 @@ public class WorldTransformer implements IClassTransformer
         {
             debug("Found world class file");
             ClassNode cn = ASMUtility.startInjection("profiler", bytes);
+
+
+            ProfilerCoreMod.logger.error("--==xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
             debug("Injecting set block hook");
             injectSetBlock(cn);
+
+            ProfilerCoreMod.logger.error("--==xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
             debug("Injecting set meta hook");
             injectSetBlockWithMeta(cn);
+
+            ProfilerCoreMod.logger.error("--==xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
             debug("Injecting update tile hook");
             injectUpdateEntities(cn);
+
+            ProfilerCoreMod.logger.error("--==xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+
             return ASMUtility.finishInjection("profiler", cn);
         }
         return bytes;
@@ -57,11 +67,19 @@ public class WorldTransformer implements IClassTransformer
     /** {@link World#setBlock(int, int, int, Block, int, int)} */
     private void injectSetBlock(ClassNode cn)
     {
-        MethodNode setBlockMethod = ASMUtility.getMethod(cn, "setBlock", "(IIIL" + getName(CLASS_KEY_BLOCK) + ";II)Z");
+        MethodNode setBlockMethod;
+        if (ProfilerCoreMod.obfuscated)
+        {
+            setBlockMethod = ASMUtility.getMethod(cn, "d", "(IIIL" + entryMap.get(CLASS_KEY_BLOCK).getValue() + ";II)Z");
+        }
+        else
+        {
+            setBlockMethod = ASMUtility.getMethod(cn, "setBlock", "(IIIL" + entryMap.get(CLASS_KEY_BLOCK).getKey() + ";II)Z");
+        }
         if (setBlockMethod == null)
         {
-            debug("Failed to locate setBlock method, moving to backup name");
-            setBlockMethod = ASMUtility.getMethod(cn, "func_147465_d", "(IIIL" + getName(CLASS_KEY_BLOCK) + ";II)Z");
+            debug("Failed to locate World#setBlock(), moving to backup name");
+            setBlockMethod = ASMUtility.getMethod(cn, "func_147465_d", "(IIIL" + entryMap.get(CLASS_KEY_BLOCK).getKey() + ";II)Z");
         }
 
         if (setBlockMethod != null)
@@ -117,7 +135,7 @@ public class WorldTransformer implements IClassTransformer
         MethodNode setBlockMetaMethod = ASMUtility.getMethod(cn, "setBlockMetadataWithNotify", "(IIIII)Z");
         if (setBlockMetaMethod == null)
         {
-            debug("Failed to locate set meta method, moving to backup name");
+            debug("Failed to locate World#setBlockMetadataWithNotify(), moving to backup name");
             setBlockMetaMethod = ASMUtility.getMethod(cn, "func_72921_c", "(IIIII)Z");
         }
 
@@ -171,7 +189,7 @@ public class WorldTransformer implements IClassTransformer
         MethodNode updateMethod = ASMUtility.getMethod(cn, "updateEntities", "()V");
         if (updateMethod == null)
         {
-            debug("Failed to locate update entity method, moving to backup name");
+            debug("Failed to locate World#updateEntities(), moving to backup name");
             updateMethod = ASMUtility.getMethod(cn, "func_72939_s", "()V");
         }
 
@@ -196,8 +214,14 @@ public class WorldTransformer implements IClassTransformer
                 AbstractInsnNode node = it.next();
                 if (node instanceof MethodInsnNode)
                 {
-                    //tileentity.updateEntity();
-                    if (((MethodInsnNode) node).name.equals("updateEntity") && ((MethodInsnNode) node).owner.contains("TileEntity"))
+                    //we are looking for (tileentity.updateEntity();) inside of a for loop in the World#updateEntities() method
+                    if (ASMUtility.doesMethodsMatch("updateEntity", null, entryMap.get(CLASS_KEY_TILE).getKey(), (MethodInsnNode) node))
+                    {
+                        updateEntityCall = (MethodInsnNode) node;
+                        break;
+                    }
+                    //func_145845_h
+                    if (ASMUtility.doesMethodsMatch("func_145845_h", null, entryMap.get(CLASS_KEY_TILE).getKey(), (MethodInsnNode) node))
                     {
                         updateEntityCall = (MethodInsnNode) node;
                         break;
@@ -209,8 +233,12 @@ public class WorldTransformer implements IClassTransformer
                 //Inject replacement
                 updateMethod.instructions.insertBefore(updateEntityCall, nodeAdd);
                 updateMethod.instructions.insertBefore(updateEntityCall.getNext(), nodeAdd2);
+                ProfilerCoreMod.tileUpdateHookAdded = true;
             }
-            ProfilerCoreMod.tileUpdateHookAdded = true;
+            else
+            {
+                ProfilerCoreMod.logger.error("Failed to find tileEntity.updateEntity() call in world#updateEntities() method");
+            }
         }
         else
         {

@@ -109,4 +109,11 @@ public class BlockHooks
         element = trace[4];
         System.out.println("\t" + element.getMethodName());
     }
+
+    public static void clearLogs()
+    {
+        tickTimes.clear();
+        blockPlacementLogs.clear();
+        blockPlacementPosLogs.clear();
+    }
 }
