@@ -1,9 +1,11 @@
 package com.builtbroken.profiler;
 
 import cpw.mods.fml.relauncher.IFMLLoadingPlugin;
+import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -12,9 +14,29 @@ import java.util.Map;
  */
 @IFMLLoadingPlugin.TransformerExclusions(value = {"com.builtbroken.profiler.asm.WorldTransformer"})
 @IFMLLoadingPlugin.MCVersion("1.7.10")
-public class ProfilierCoreMod implements IFMLLoadingPlugin
+public class ProfilerCoreMod implements IFMLLoadingPlugin
 {
     public static final Logger logger = LogManager.getLogger("BBM-Profiler-ASM");
+
+    public static boolean tileUpdateHookAdded = false;
+    public static boolean blockChangeHookAdded = false;
+    public static boolean blockChangeMetaHookAdded = false;
+
+    public static final boolean obfuscated;
+
+    static
+    {
+        boolean obf = true;
+        try
+        {
+            obf = ((LaunchClassLoader) ProfilerCoreMod.class.getClassLoader()).getClassBytes("net.minecraft.world.World") == null;
+        }
+        catch (IOException iox)
+        {
+            ProfilerCoreMod.logger.catching(iox);
+        }
+        obfuscated = obf;
+    }
 
     /**
      * Checks if the program is running in development mode.
@@ -29,28 +51,33 @@ public class ProfilierCoreMod implements IFMLLoadingPlugin
     }
 
     @Override
-    public String[] getASMTransformerClass() {
-        return new String[] {"com.builtbroken.profiler.asm.WorldTransformer"};
+    public String[] getASMTransformerClass()
+    {
+        return new String[]{"com.builtbroken.profiler.asm.WorldTransformer"};
     }
 
     @Override
-    public String getModContainerClass() {
+    public String getModContainerClass()
+    {
         return "com.builtbroken.profiler.asm.ModContainer";
     }
 
     @Override
-    public String getSetupClass() {
+    public String getSetupClass()
+    {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
-    public void injectData(Map<String, Object> data) {
+    public void injectData(Map<String, Object> data)
+    {
 
     }
 
     @Override
-    public String getAccessTransformerClass() {
+    public String getAccessTransformerClass()
+    {
         // TODO Auto-generated method stub
         return "";
     }

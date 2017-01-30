@@ -1,6 +1,6 @@
 package com.builtbroken.profiler.asm;
 
-import com.builtbroken.profiler.ProfilierCoreMod;
+import com.builtbroken.profiler.ProfilerCoreMod;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.*;
@@ -90,7 +90,7 @@ public final class ASMUtility
      */
     public static ClassNode startInjection(String name, byte[] bytes)
     {
-        ProfilierCoreMod.logger.info("Starting injection process for " + name);
+        ProfilerCoreMod.logger.info("Starting injection process for " + name);
         final ClassNode node = new ClassNode();
         final ClassReader reader = new ClassReader(bytes);
         reader.accept(node, 0);
@@ -105,7 +105,7 @@ public final class ASMUtility
      */
     public static byte[] finishInjection(String name, ClassNode node)
     {
-        ProfilierCoreMod.logger.info("Ending injection process for " + name);
+        ProfilerCoreMod.logger.info("Ending injection process for " + name);
         final ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_MAXS);
         node.accept(writer);
         byte[] data = writer.toByteArray();
@@ -121,7 +121,7 @@ public final class ASMUtility
      */
     public static void _doDebug(ClassNode node, byte[] data)
     {
-        if (ProfilierCoreMod.isDevMode())
+        if (ProfilerCoreMod.isDevMode())
         {
             try
             {

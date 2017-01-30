@@ -1,5 +1,6 @@
 package com.builtbroken.profiler.asm;
 
+import com.builtbroken.profiler.ProfilerCoreMod;
 import net.minecraft.block.Block;
 import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.world.World;
@@ -26,14 +27,11 @@ public class WorldTransformer implements IClassTransformer
 
     private static final HashMap<String, SimpleEntry<String, String>> entryMap = new HashMap<String, SimpleEntry<String, String>>();
 
-    private boolean obf;
-
     public WorldTransformer()
     {
         entryMap.put(CLASS_KEY_WORLD, new SimpleEntry<String, String>("net/minecraft/world/World", "ahb"));
         entryMap.put(CLASS_KEY_BLOCK, new SimpleEntry<String, String>("net/minecraft/block/Block", "aij"));
         entryMap.put(CLASS_KEY_TILE, new SimpleEntry<String, String>("net/minecraft/tileentity/TileEntity", "aor"));
-
     }
 
     @Override
@@ -94,6 +92,7 @@ public class WorldTransformer implements IClassTransformer
                 //Inject method call before return node
                 setBlockMethod.instructions.insertBefore(node, nodeAdd2);
             }
+            ProfilerCoreMod.blockChangeHookAdded = true;
         }
     }
 
@@ -138,6 +137,7 @@ public class WorldTransformer implements IClassTransformer
                 //Inject method call before return node
                 setBlockMetaMethod.instructions.insertBefore(node, nodeAdd2);
             }
+            ProfilerCoreMod.blockChangeMetaHookAdded = true;
         }
     }
 
@@ -181,6 +181,7 @@ public class WorldTransformer implements IClassTransformer
                 updateMethod.instructions.insertBefore(updateEntityCall, nodeAdd);
                 updateMethod.instructions.insertBefore(updateEntityCall.getNext(), nodeAdd2);
             }
+            ProfilerCoreMod.tileUpdateHookAdded = true;
         }
     }
 
@@ -191,23 +192,9 @@ public class WorldTransformer implements IClassTransformer
         {
             return "";
         }
-        else if (obf)
+        else if (ProfilerCoreMod.obfuscated)
         {
             return entry.getValue();
-        }
-        else
-        {
-            return entry.getKey();
-        }
-    }
-
-
-    private String getDeobfName(String key)
-    {
-        SimpleEntry<String, String> entry = entryMap.get(key);
-        if (entry == null)
-        {
-            return "";
         }
         else
         {

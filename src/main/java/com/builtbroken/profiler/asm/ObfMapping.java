@@ -1,35 +1,16 @@
 package com.builtbroken.profiler.asm;
 
-import com.builtbroken.profiler.ProfilierCoreMod;
 import com.google.common.base.Objects;
 import cpw.mods.fml.common.asm.transformers.deobf.FMLDeobfuscatingRemapper;
-import net.minecraft.launchwrapper.LaunchClassLoader;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.*;
-
-import java.io.IOException;
 
 /**
  * @author ChickenBones
  */
 public class ObfMapping
 {
-    public static final boolean obfuscated;
-
-    static
-    {
-        boolean obf = true;
-        try
-        {
-            obf = ((LaunchClassLoader) ObfMapping.class.getClassLoader()).getClassBytes("net.minecraft.world.World") == null;
-        } catch (IOException iox)
-        {
-            ProfilierCoreMod.logger.catching(iox);
-        }
-        obfuscated = obf;
-    }
-
     /**
      * CCC will deal with this.
      */
