@@ -61,20 +61,20 @@ public class TickHandler
         output.out("\tBlock Placement Average(s)");
         for (Map.Entry<Block, PlotBlock> entry : BlockHooks.blockPlacementLogs.entrySet())
         {
-            output.out("\tB:" + entry.getKey().getLocalizedName() + "  Average CPU Time: " + entry.getValue().getAvergateTimeDisplay());
+            output.out("\tB:" + entry.getKey().getLocalizedName() + "  Average CPU Time: " + entry.getValue().getAverageTimeDisplay());
         }
         output.out("--------------------------------------");
         output.out("\tPer:TileEntity#updateEntity() Average(s)");
         HashMap<Class<TileEntity>, Plot> classTickData = new HashMap();
         for (Map.Entry<TileEntity, Plot> entry : WorldHooks.tileEntityUpdateLogs.entrySet())
         {
-            output.out("\tT:" + entry.getKey() + "  Average CPU Time: " + entry.getValue().getAvergateTimeDisplay());
+            output.out("\tT:" + entry.getKey() + "  Average CPU Time: " + entry.getValue().getAverageTimeDisplay());
             //Debug if time took way too long
             long time = entry.getValue().getAverageTime().longValue();
             if(time > nanosecondWarningTrigger)
             {
                 output.out("Warning: High average CPU time detected. Dumping data for closer inspection.");
-                for(Pair<Long, Integer> data : entry.getValue())
+                for(Pair<Long, Integer> data : entry.getValue().list)
                 {
                     output.out("\t\tNanoseconds: " + data.right() + "  TimeTaken: " + data.left());
                 }
@@ -91,7 +91,7 @@ public class TickHandler
         output.out("\tClass:TileEntity#updateEntity() Average(s)");
         for (Map.Entry<Class<TileEntity>, Plot> entry : classTickData.entrySet())
         {
-            output.out("\tClass:" + entry.getKey() + "  Average CPU Time: " + entry.getValue().getAvergateTimeDisplay());
+            output.out("\tClass:" + entry.getKey() + "  Average CPU Time: " + entry.getValue().getAverageTimeDisplay());
         }
         //Clear data to free up RAM
         WorldHooks.tileEntityUpdateLogs.clear();

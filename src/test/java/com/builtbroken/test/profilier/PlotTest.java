@@ -22,16 +22,16 @@ public class PlotTest extends TestCase
     {
         Plot plot = new Plot("blarg");
         plot.addPoint(5L, 5);
-        assertTrue(plot.contains(new Pair<Long, Integer>(5L, 5)));
+        assertTrue(plot.list.contains(new Pair<Long, Integer>(5L, 5)));
     }
 
     public void testRemoveOlderThan()
     {
         Plot plot = new Plot("blarg");
         plot.addPoint(5L, 5);
-        assertTrue(plot.contains(new Pair<Long, Integer>(5L, 5)));
+        assertTrue(plot.list.contains(new Pair<Long, Integer>(5L, 5)));
         plot.removeDataOlderThan(6L);
-        assertFalse(plot.contains(new Pair<Long, Integer>(5L, 5)));
+        assertFalse(plot.list.contains(new Pair<Long, Integer>(5L, 5)));
     }
 
     public void testAverage()
